@@ -675,7 +675,7 @@
             box-shadow: 0 8px 30px rgba(37, 211, 102, 0.75);
         }
 
-        /* RESPONSIVO */
+        /* RESPONSIVO Y ADAPTACIÓN POR DISPOSITIVO */
         @media (max-width: 968px) {
             .about-grid, .contact-grid {
                 grid-template-columns: 1fr;
@@ -693,6 +693,7 @@
                 padding: 2rem;
                 border-bottom: 1px solid rgba(212, 175, 55, 0.25);
                 text-align: center;
+                gap: 1.4rem;
             }
 
             .nav-menu.active {
@@ -710,6 +711,137 @@
             .services-grid {
                 grid-template-columns: 1fr;
             }
+        }
+
+        /* Ajustes específicos para celular (viewport pequeño o clase .is-mobile) */
+        @media (max-width: 600px), body.is-mobile {
+            .nav-container {
+                padding: 0.75rem 1rem;
+            }
+
+            .logo-img {
+                width: 40px;
+                height: 40px;
+            }
+
+            .logo-title {
+                font-size: 1rem;
+            }
+
+            .logo-subtitle {
+                font-size: 0.6rem;
+                letter-spacing: 0.12em;
+            }
+
+            .hero {
+                min-height: 100svh;
+                padding: 6.5rem 1.25rem 3rem;
+            }
+
+            .hero-logo-img {
+                width: 150px;
+                height: 150px;
+            }
+
+            .hero h1 {
+                font-size: 1.95rem;
+            }
+
+            .hero h1 span {
+                font-size: 1rem;
+                letter-spacing: 0.15em;
+            }
+
+            .hero p {
+                font-size: 0.98rem;
+            }
+
+            .hero-buttons {
+                flex-direction: column;
+                width: 100%;
+                max-width: 320px;
+            }
+
+            .btn-primary, .btn-secondary {
+                width: 100%;
+                justify-content: center;
+                padding: 0.85rem 1.4rem;
+                font-size: 0.88rem;
+            }
+
+            .content-section, .about-section, .contact-section {
+                padding: 3.5rem 1.25rem;
+            }
+
+            .section-header {
+                margin-bottom: 2.2rem;
+            }
+
+            .section-header h2, .about-text h2 {
+                font-size: 1.75rem;
+            }
+
+            .section-header p {
+                font-size: 0.95rem;
+            }
+
+            .service-card {
+                padding: 1.75rem 1.4rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .contact-info h3 {
+                font-size: 1.55rem;
+            }
+
+            .contact-form-wrapper h3 {
+                font-size: 1.45rem;
+            }
+
+            .form-control {
+                font-size: 16px; /* Evita zoom automático en iOS/Android al tocar inputs */
+            }
+
+            .whatsapp-float {
+                width: 52px;
+                height: 52px;
+                bottom: 18px;
+                right: 18px;
+                font-size: 27px;
+            }
+        }
+
+        /* Estilos explícitos cuando se detecta celular vía JS (incluso en pantallas de alta densidad) */
+        body.is-mobile .about-grid,
+        body.is-mobile .contact-grid,
+        body.is-mobile .services-grid {
+            grid-template-columns: 1fr;
+        }
+
+        body.is-mobile .nav-menu {
+            display: none;
+            flex-direction: column;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            background: rgba(10, 10, 10, 0.98);
+            padding: 1.8rem 1.25rem;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.25);
+            text-align: center;
+            gap: 1.3rem;
+        }
+
+        body.is-mobile .nav-menu.active {
+            display: flex;
+        }
+
+        body.is-mobile .menu-toggle {
+            display: block;
         }
     </style>
 </head>
@@ -951,12 +1083,35 @@
         <i class="fab fa-whatsapp"></i>
     </a>
 
-    <!-- SCRIPT DE INTERACTIVIDAD -->
+    <!-- SCRIPT DE DETECCIÓN DE DISPOSITIVO E INTERACTIVIDAD -->
     <script>
+        // Detección precisa de celular vs computadora
+        function detectarDispositivo() {
+            const ua = navigator.userAgent || navigator.vendor || window.opera;
+            const esMovilUA = /android|webos|iphone|ipod|blackberry|iemobile|opera mini|mobile/i.test(ua);
+            const esPantallaChica = window.innerWidth <= 768;
+            const esTactilChico = ('ontouchstart' in window || navigator.maxTouchPoints > 0) && window.innerWidth <= 968;
+
+            const esCelular = esMovilUA || esPantallaChica || esTactilChico;
+
+            document.body.classList.toggle('is-mobile', esCelular);
+            document.body.classList.toggle('is-desktop', !esCelular);
+            document.documentElement.setAttribute('data-device', esCelular ? 'mobile' : 'desktop');
+
+            return esCelular;
+        }
+
+        // Ejecutar al cargar y al cambiar tamaño/rotar pantalla
+        detectarDispositivo();
+        window.addEventListener('resize', detectarDispositivo);
+        window.addEventListener('orientationchange', detectarDispositivo);
+
+        // Menú hamburguesa para celular
         const mobileMenu = document.getElementById('mobile-menu');
         const navMenu = document.querySelector('.nav-menu');
 
-        mobileMenu.addEventListener('click', () => {
+        mobileMenu.addEventListener('click', (e) => {
+            e.stopPropagation();
             navMenu.classList.toggle('active');
         });
 
@@ -966,18 +1121,49 @@
             });
         });
 
+        // Cerrar menú al tocar fuera en celular
+        document.addEventListener('click', (e) => {
+            if (navMenu.classList.contains('active') && !navMenu.contains(e.target) && !mobileMenu.contains(e.target)) {
+                navMenu.classList.remove('active');
+            }
+        });
+
+        // Abrir enlace de WhatsApp optimizado según celular o computadora
+        function abrirWhatsApp(mensajeTexto) {
+            const numero = '527791151775';
+            const textoCodificado = encodeURIComponent(mensajeTexto);
+            const esCelular = detectarDispositivo();
+
+            if (esCelular) {
+                // En celular abre directo la app de WhatsApp sin bloqueo de ventanas emergentes
+                window.location.href = `https://api.whatsapp.com/send?phone=${numero}&text=${textoCodificado}`;
+            } else {
+                // En computadora abre WhatsApp Web / Escritorio en nueva pestaña
+                window.open(`https://web.whatsapp.com/send?phone=${numero}&text=${textoCodificado}`, '_blank', 'noopener,noreferrer');
+            }
+        }
+
+        // Adaptar enlaces directos de WhatsApp al comportamiento de celular/computadora
+        document.querySelectorAll('a[href*="wa.me/527791151775"]').forEach(enlace => {
+            enlace.addEventListener('click', function(e) {
+                e.preventDefault();
+                const urlObj = new URL(this.href);
+                const texto = urlObj.searchParams.get('text') || 'Hola, deseo información sobre sus servicios legales e inmobiliarios.';
+                abrirWhatsApp(texto);
+            });
+        });
+
+        // Envío del formulario de contacto
         const form = document.getElementById('consultationForm');
         form.addEventListener('submit', function(e) {
             e.preventDefault();
-            const nombre = document.getElementById('nombre').value;
-            const telefono = document.getElementById('telefono').value;
+            const nombre = document.getElementById('nombre').value.trim();
+            const telefono = document.getElementById('telefono').value.trim();
             const servicio = document.getElementById('servicio').value;
-            const mensaje = document.getElementById('mensaje').value;
+            const mensaje = document.getElementById('mensaje').value.trim();
 
             const textoWhatsApp = `Hola, mi nombre es *${nombre}* (Tel: ${telefono}). Me interesa el servicio de *${servicio}*. Detalle de mi consulta: ${mensaje}`;
-            const urlWhatsApp = `https://wa.me/527791151775?text=${encodeURIComponent(textoWhatsApp)}`;
-            
-            window.open(urlWhatsApp, '_blank');
+            abrirWhatsApp(textoWhatsApp);
         });
     </script>
 </body>
